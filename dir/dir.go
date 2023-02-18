@@ -40,38 +40,40 @@ func (d *directory) Compare(target *directory) {
 
 	// Jika file ada di source tapi tidak ada di target berikan keterangan NEW
 	for _, sourcefile := range sourcefiles {
-		_, err := os.Stat(targetpath + sourcefile.Name)
+		_, err := os.Stat(targetpath + sourcefile.Path + "/" + sourcefile.Name)
 
 		if err != nil && sourcefile.CreatedAt.Equal(sourcefile.ModifiedAt) {
-			fmt.Println(d.path + sourcefile.Name + " NEW")
+			fmt.Println(d.path + sourcefile.Path + "/" + sourcefile.Name + " NEW")
 		}
 
 		if sourcefile.ModifiedAt.After(sourcefile.CreatedAt) {
-			fmt.Println(d.path + sourcefile.Name + " MODIFIED")
+			fmt.Println(d.path + sourcefile.Path + "/" + sourcefile.Name + " MODIFIED")
 		}
 	}
 
 	// Jika file tidak ada di source tapi ada di target berikan keterangan DELETED
 	for _, targetfile := range targetfiles {
-		_, err := os.Stat(d.path + targetfile.Name)
+		// fmt.Println(targetfile.Path, "index", i)
+		_, err := os.Stat(d.path + targetfile.Path + "/" + targetfile.Name)
 
 		if err != nil && !targetfile.CreatedAt.Equal(targetfile.ModifiedAt) {
-			fmt.Println(d.path + targetfile.Name + " DELETED")
+			fmt.Println(d.path + targetfile.Path + "/" + targetfile.Name + " DELETED")
 		}
 
 		if targetfile.ModifiedAt.After(targetfile.CreatedAt) {
-			fmt.Println(targetpath + targetfile.Name + " MODIFIED")
+			fmt.Println(targetpath + targetfile.Path + "/" + targetfile.Name + " MODIFIED")
 		}
 	}
 }
 
 func (d *directory) Scan() []file {
-	d.readDir(d.path)
+	split := strings.Split(d.path, "/")
+	d.readDir(d.path, split, split[len(split)-1])
 
 	return d.files
 }
 
-func (d *directory) readDir(path string) {
+func (d *directory) readDir(path string, dir []string, root string) {
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return
@@ -82,24 +84,24 @@ func (d *directory) readDir(path string) {
 			continue
 		}
 
+		directory := root + "/" + dir[len(dir)-1]
+
 		if file.IsDir() {
-			d.readDir(path + "/" + file.Name())
+			newpath := path + "/" + file.Name()
+			d.readDir(newpath, strings.Split(newpath, "/"), directory)
 			continue
 		}
-
-		dir := strings.Join(strings.Split(path, "/")[6:], "/")
-		dir = dir + "/" + file.Name()
-		dir = "/" + strings.Join(strings.Split(dir, "/")[1:], "/")
 
 		var st syscall.Stat_t
 		if err := syscall.Stat(path+"/"+file.Name(), &st); err != nil {
 			panic(err)
 		}
 
+		path := strings.Join(strings.Split(directory, "/")[2:], "/")
 		createdAt := time.Unix(st.Ctim.Sec, 0)
 
 		f, _ := file.Info()
 		modifiedAt := time.Unix(f.ModTime().Unix(), 0)
-		d.files = append(d.files, NewFile(dir, createdAt, modifiedAt))
+		d.files = append(d.files, NewFile(file.Name(), "/"+path, createdAt, modifiedAt))
 	}
 }
