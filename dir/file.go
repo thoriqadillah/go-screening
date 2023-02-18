@@ -3,7 +3,7 @@ package dir
 import "time"
 
 type file struct {
-	name       string
+	Name       string
 	CreatedAt  time.Time
 	ModifiedAt time.Time
 	DeletedAt  time.Time
@@ -11,7 +11,7 @@ type file struct {
 
 func NewFile(name string, now time.Time) file {
 	return file{
-		name:       name,
+		Name:       name,
 		CreatedAt:  now,
 		ModifiedAt: now,
 		DeletedAt:  time.Time{},

@@ -1,4 +1,4 @@
-package enitity
+package renderer
 
 type block struct {
 	X    int

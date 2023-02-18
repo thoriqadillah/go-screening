@@ -1,7 +1,6 @@
 package dir
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -12,43 +11,52 @@ type Vesrionable interface {
 	Fetch()
 }
 
-type Directory struct {
+type directory struct {
 	path     string
 	scanTime time.Time
 	files    []file
 }
 
-func NewDirectory(path string) Directory {
+func NewDirectory(path string) directory {
 	dir, err := os.ReadDir(path)
 	if err != nil {
 		panic(err)
 	}
 
-	return Directory{
+	return directory{
 		path:     path,
 		scanTime: time.Now(),
 		files:    make([]file, 0, len(dir)),
 	}
 }
 
-// intial read: baca directory kemudian simpan dalam bentuk file
-// jadikan struct menjadi json
-// simpan data dalam bentuk json ke file
-func (d *Directory) Commit() {
-	d.readDir(d.path)
-	for i := range d.files {
-		fmt.Println(d.files[i].name, d.files[i].CreatedAt, d.files[i].ModifiedAt)
-	}
+func (d *directory) Compare(dir *directory) {
+	// ====UNTUK DELETED=====
+	// read data pada source dan target dir kemudian simpan (initial)
+	// mulai hapus file pada source, kemudian run program untuk mengetahui file mana yang DELETED pada source
+	// load saved source dan bandingkan ulang dengan yang baru
+	// jika ada yang nil pada scan file, maka update deletedAt pada elemen dari array of file pada source dan kemudian simpan ulang
 
-	fmt.Println("===========")
+	// ====UNTUK NEW=====
+	// mulai tambah file pada source, kemudian run program untuk mengetahui file mana yang NEW pada source
+	// load saved source dan bandingkan ulang dengan yang baru per index
+	// jika pada nama dalam suatu elemen berbeda, print file tersebut, kemudian overwrite masing2 index mulai dari situ
+	// simpan ulang ke persistent
 
-	d.updateDir(d.path, 0)
-	for i := range d.files {
-		fmt.Println(d.files[i].name, d.files[i].CreatedAt, d.files[i].ModifiedAt)
-	}
+	// ====UNTUK MODIFIED=====
+	// mulai tambah ubah content pada source, kemudian run program untuk mengetahui file mana yang MODIFIED pada source
+	// load saved source dan bandingkan ulang dengan yang baru per index
+	// jika pada suatu elemen file yang disimpan modifiedAt nya berbeda dengan file baru yang discan, maka jadikan dia modified
+	// simpan ulang ke persistent
 }
 
-func (d *Directory) readDir(path string) {
+func (d *directory) Scan() []file {
+	d.readDir(d.path)
+
+	return d.files
+}
+
+func (d *directory) readDir(path string) {
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return
@@ -74,7 +82,7 @@ func (d *Directory) readDir(path string) {
 	}
 }
 
-func (d *Directory) updateDir(path string, i int) {
+func (d *directory) updateDir(path string, i int) {
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return
@@ -94,7 +102,7 @@ func (d *Directory) updateDir(path string, i int) {
 			continue
 		}
 
-		if _, err := os.Stat(path + d.files[i].name); err != nil {
+		if _, err := os.Stat(path + d.files[i].Name); err != nil {
 			d.files[i].DeletedAt = time.Now()
 		}
 

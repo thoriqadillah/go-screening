@@ -1,4 +1,4 @@
-package enitity
+package renderer
 
 import (
 	"fmt"

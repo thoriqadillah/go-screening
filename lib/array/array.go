@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func GetMaxNumber(numbers []int) int {
+func Max(numbers []int) int {
 	max := math.MinInt
 	for _, v := range numbers {
 		if v > max {
