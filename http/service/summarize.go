@@ -26,8 +26,7 @@ func NewGraduation(api api.GraduationAPI) GraduationService {
 	}
 }
 
-func (g *GraduationService) ToCSV(path string, years ...string) error {
-	file := "/data"
+func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...string) error {
 	ext := ".csv"
 
 	URL := g.api.URL()
@@ -35,7 +34,7 @@ func (g *GraduationService) ToCSV(path string, years ...string) error {
 	ch := make(chan *graduees.Data)
 	defer close(ch)
 
-	workers := worker.NewWorker(2)
+	workers := worker.NewWorker(concurrent_limit)
 	workers.Run()
 
 	var wg sync.WaitGroup
@@ -50,8 +49,10 @@ func (g *GraduationService) ToCSV(path string, years ...string) error {
 		workers.Add(func() {
 			g.api.GetGraduees(ch, &wg)
 		})
+
+		p := path + "/" + year + ext
 		workers.Add(func() {
-			g.writeCSV(path+file+"-"+year+ext, ch, &wg)
+			g.writeCSV(p, ch, &wg)
 		})
 
 		g.api.UpdateURL(URL)
