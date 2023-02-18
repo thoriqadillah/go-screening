@@ -9,11 +9,11 @@ type file struct {
 	DeletedAt  time.Time
 }
 
-func NewFile(name string, now time.Time) file {
+func NewFile(name string, createdAt time.Time, modifiedAt time.Time) file {
 	return file{
 		Name:       name,
-		CreatedAt:  now,
-		ModifiedAt: now,
+		CreatedAt:  createdAt,
+		ModifiedAt: modifiedAt,
 		DeletedAt:  time.Time{},
 	}
 }

@@ -1,8 +1,10 @@
 package dir
 
 import (
+	"fmt"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -30,24 +32,37 @@ func NewDirectory(path string) directory {
 	}
 }
 
-func (d *directory) Compare(dir *directory) {
-	// ====UNTUK DELETED=====
-	// read data pada source dan target dir kemudian simpan (initial)
-	// mulai hapus file pada source, kemudian run program untuk mengetahui file mana yang DELETED pada source
-	// load saved source dan bandingkan ulang dengan yang baru
-	// jika ada yang nil pada scan file, maka update deletedAt pada elemen dari array of file pada source dan kemudian simpan ulang
+func (d *directory) Compare(target *directory) {
+	sourcefiles := d.Scan()
 
-	// ====UNTUK NEW=====
-	// mulai tambah file pada source, kemudian run program untuk mengetahui file mana yang NEW pada source
-	// load saved source dan bandingkan ulang dengan yang baru per index
-	// jika pada nama dalam suatu elemen berbeda, print file tersebut, kemudian overwrite masing2 index mulai dari situ
-	// simpan ulang ke persistent
+	targetpath := target.path
+	targetfiles := target.Scan()
 
-	// ====UNTUK MODIFIED=====
-	// mulai tambah ubah content pada source, kemudian run program untuk mengetahui file mana yang MODIFIED pada source
-	// load saved source dan bandingkan ulang dengan yang baru per index
-	// jika pada suatu elemen file yang disimpan modifiedAt nya berbeda dengan file baru yang discan, maka jadikan dia modified
-	// simpan ulang ke persistent
+	// Jika file ada di source tapi tidak ada di target berikan keterangan NEW
+	for _, sourcefile := range sourcefiles {
+		_, err := os.Stat(targetpath + sourcefile.Name)
+
+		if err != nil && sourcefile.CreatedAt.Equal(sourcefile.ModifiedAt) {
+			fmt.Println(d.path + sourcefile.Name + " NEW")
+		}
+
+		if sourcefile.ModifiedAt.After(sourcefile.CreatedAt) {
+			fmt.Println(d.path + sourcefile.Name + " MODIFIED")
+		}
+	}
+
+	// Jika file tidak ada di source tapi ada di target berikan keterangan DELETED
+	for _, targetfile := range targetfiles {
+		_, err := os.Stat(d.path + targetfile.Name)
+
+		if err != nil && !targetfile.CreatedAt.Equal(targetfile.ModifiedAt) {
+			fmt.Println(d.path + targetfile.Name + " DELETED")
+		}
+
+		if targetfile.ModifiedAt.After(targetfile.CreatedAt) {
+			fmt.Println(targetpath + targetfile.Name + " MODIFIED")
+		}
+	}
 }
 
 func (d *directory) Scan() []file {
@@ -76,43 +91,15 @@ func (d *directory) readDir(path string) {
 		dir = dir + "/" + file.Name()
 		dir = "/" + strings.Join(strings.Split(dir, "/")[1:], "/")
 
-		f, _ := file.Info()
-		time := f.ModTime()
-		d.files = append(d.files, NewFile(dir, time))
-	}
-}
-
-func (d *directory) updateDir(path string, i int) {
-	files, err := os.ReadDir(path)
-	if err != nil {
-		return
-	}
-
-	if i == len(d.files) {
-		return
-	}
-
-	for _, file := range files {
-		if string(file.Name()[0]) == "." {
-			continue
-		}
-
-		if file.IsDir() {
-			d.updateDir(path+"/"+file.Name(), i+1)
-			continue
-		}
-
-		if _, err := os.Stat(path + d.files[i].Name); err != nil {
-			d.files[i].DeletedAt = time.Now()
-		}
-
-		f, err := file.Info()
-		if err != nil {
+		var st syscall.Stat_t
+		if err := syscall.Stat(path+"/"+file.Name(), &st); err != nil {
 			panic(err)
 		}
 
-		if f.ModTime().Nanosecond() != d.files[i].CreatedAt.Nanosecond() {
-			d.files[i].ModifiedAt = time.Now()
-		}
+		createdAt := time.Unix(st.Ctim.Sec, 0)
+
+		f, _ := file.Info()
+		modifiedAt := time.Unix(f.ModTime().Unix(), 0)
+		d.files = append(d.files, NewFile(dir, createdAt, modifiedAt))
 	}
 }
