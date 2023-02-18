@@ -9,6 +9,7 @@ import (
 
 	"github.com/thoriqadillah/screening/http/api"
 	"github.com/thoriqadillah/screening/http/model/graduees"
+	"github.com/thoriqadillah/screening/worker"
 )
 
 // var wg sync.WaitGroup
@@ -34,6 +35,9 @@ func (g *GraduationService) ToCSV(path string, years ...string) error {
 	ch := make(chan *graduees.Data)
 	defer close(ch)
 
+	workers := worker.NewWorker(2)
+	workers.Run()
+
 	var wg sync.WaitGroup
 
 	for _, year := range years {
@@ -43,8 +47,12 @@ func (g *GraduationService) ToCSV(path string, years ...string) error {
 		g.api.UpdateURL(temp)
 
 		wg.Add(2)
-		go g.api.GetGraduees(ch, &wg)
-		go g.writeCSV(path+file+"-"+year+ext, ch, &wg)
+		workers.Add(func() {
+			g.api.GetGraduees(ch, &wg)
+		})
+		workers.Add(func() {
+			g.writeCSV(path+file+"-"+year+ext, ch, &wg)
+		})
 
 		g.api.UpdateURL(URL)
 	}

@@ -1,5 +1,9 @@
 package queue
 
+import (
+	"reflect"
+)
+
 type Queue interface {
 	Push(key interface{})
 	Pop() interface{}
@@ -11,20 +15,26 @@ type Queue interface {
 type queue struct {
 	value []interface{}
 	len   int
+	types []string
 }
 
 func New(size int) Queue {
 	return &queue{
 		value: make([]interface{}, 0, size),
 		len:   0,
+		types: make([]string, 3),
 	}
 }
 
 func (q *queue) Push(key interface{}) {
-	if !q.Contains(key) {
-		q.value = append(q.value, key)
+	q.value = append(q.value, key)
+
+	typeof := reflect.TypeOf(key)
+	if len(q.types) == 0 {
+		q.types[0] = typeof.String()
 		q.len++
 	}
+
 }
 
 func (q *queue) Pop() interface{} {

@@ -24,5 +24,5 @@ func main() {
 	const URL = "https://data.gov.sg/api/action/datastore_search?resource_id=eb8b932c-503c-41e7-b513-114cffbe2338"
 	api := api.NewGraduationAPI(URL)
 	graduation := service.NewGraduation(api)
-	graduation.ToCSV("/home/thoriqadillah/Development/Go/src/screening", "2013", "2014")
+	graduation.ToCSV("/home/thoriqadillah/Development/Go/src/screening", "2013", "2014", "2012")
 }
