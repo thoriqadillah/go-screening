@@ -1,0 +1,51 @@
+[
+	{
+		"Name": "readme.md",
+		"Path": "compare/",
+		"Size": 1336,
+		"CreatedAt": "2023-02-17T18:09:27+07:00",
+		"ModifiedAt": "2023-02-17T18:09:27+07:00"
+	},
+	{
+		"Name": "readme.md",
+		"Path": "concurrency/",
+		"Size": 965,
+		"CreatedAt": "2023-02-17T18:09:27+07:00",
+		"ModifiedAt": "2023-02-17T18:09:27+07:00"
+	},
+	{
+		"Name": "queue.go",
+		"Path": "queue/",
+		"Size": 197,
+		"CreatedAt": "2023-02-19T14:06:28+07:00",
+		"ModifiedAt": "2023-02-19T14:06:28+07:00"
+	},
+	{
+		"Name": "readme.md",
+		"Path": "queue/",
+		"Size": 259,
+		"CreatedAt": "2023-02-17T18:09:27+07:00",
+		"ModifiedAt": "2023-02-17T18:09:27+07:00"
+	},
+	{
+		"Name": "readme.md",
+		"Path": "",
+		"Size": 2,
+		"CreatedAt": "2023-02-18T22:02:12+07:00",
+		"ModifiedAt": "2023-02-18T22:02:12+07:00"
+	},
+	{
+		"Name": "singo.txt",
+		"Path": "",
+		"Size": 2,
+		"CreatedAt": "2023-02-18T22:20:52+07:00",
+		"ModifiedAt": "2023-02-18T22:20:52+07:00"
+	},
+	{
+		"Name": "readme.md",
+		"Path": "sorting/",
+		"Size": 1249,
+		"CreatedAt": "2023-02-17T18:09:27+07:00",
+		"ModifiedAt": "2023-02-17T18:09:27+07:00"
+	}
+]

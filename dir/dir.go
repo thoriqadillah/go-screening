@@ -34,34 +34,45 @@ func NewDirectory(path string) directory {
 
 func (d *directory) Compare(target *directory) {
 	sourcefiles := d.Scan()
+	savedSource := make([]file, len(d.files))
+	splitSrc := strings.Split(d.path, "/")
+	sourceFolder := splitSrc[len(splitSrc)-1]
+	if err := load(sourceFolder+".tmp", &savedSource); err != nil {
+		save(sourceFolder+".tmp", d.files)
+	}
 
 	targetpath := target.path
 	targetfiles := target.Scan()
 
 	// Jika file ada di source tapi tidak ada di target berikan keterangan NEW
-	for _, sourcefile := range sourcefiles {
-		_, err := os.Stat(targetpath + sourcefile.Path + "/" + sourcefile.Name)
+	for i, sourcefile := range sourcefiles {
+		_, err := os.Stat(targetpath + "/" + sourcefile.Path + sourcefile.Name)
 
 		if err != nil && sourcefile.CreatedAt.Equal(sourcefile.ModifiedAt) {
-			fmt.Println(d.path + sourcefile.Path + "/" + sourcefile.Name + " NEW")
+			fmt.Println(d.path + "/" + sourcefile.Path + sourcefile.Name + " NEW")
 		}
 
-		if sourcefile.ModifiedAt.After(sourcefile.CreatedAt) {
-			fmt.Println(d.path + sourcefile.Path + "/" + sourcefile.Name + " MODIFIED")
+		if !savedSource[i].ModifiedAt.Equal(sourcefile.ModifiedAt) {
+			fmt.Println(d.path + "/" + sourcefile.Path + sourcefile.Name + " MODIFIED")
 		}
 	}
 
+	savedTarget := make([]file, len(targetfiles))
+	splitTgt := strings.Split(targetpath, "/")
+	targetFolder := splitTgt[len(splitTgt)-1]
+	if err := load(targetFolder+".tmp", &savedTarget); err != nil {
+		save(targetFolder+".tmp", target.files)
+	}
 	// Jika file tidak ada di source tapi ada di target berikan keterangan DELETED
-	for _, targetfile := range targetfiles {
-		// fmt.Println(targetfile.Path, "index", i)
-		_, err := os.Stat(d.path + targetfile.Path + "/" + targetfile.Name)
+	for i, targetfile := range targetfiles {
+		_, err := os.Stat(d.path + "/" + targetfile.Path + targetfile.Name)
 
 		if err != nil && !targetfile.CreatedAt.Equal(targetfile.ModifiedAt) {
-			fmt.Println(d.path + targetfile.Path + "/" + targetfile.Name + " DELETED")
+			fmt.Println(d.path + "/" + targetfile.Path + targetfile.Name + " DELETED")
 		}
 
-		if targetfile.ModifiedAt.After(targetfile.CreatedAt) {
-			fmt.Println(targetpath + targetfile.Path + "/" + targetfile.Name + " MODIFIED")
+		if !savedTarget[i].ModifiedAt.Equal(targetfile.ModifiedAt) {
+			fmt.Println(targetpath + "/" + targetfile.Path + targetfile.Name + " MODIFIED")
 		}
 	}
 }
@@ -69,6 +80,12 @@ func (d *directory) Compare(target *directory) {
 func (d *directory) Scan() []file {
 	split := strings.Split(d.path, "/")
 	d.readDir(d.path, split, split[len(split)-1])
+
+	//===UNTUK MODIFIED===
+	//check apakah sudah ada file tmp nya belum
+	//kalo belum ada, buat. Kalo sudah, biarin aja, jangan buat lagi
+	//mulai modified file yang diinginkan
+	//check size nya apakah sama atau tidak. jika berbeda, maka dia modified
 
 	return d.files
 }
@@ -98,10 +115,14 @@ func (d *directory) readDir(path string, dir []string, root string) {
 		}
 
 		path := strings.Join(strings.Split(directory, "/")[2:], "/")
+		if path != "" {
+			path = path + "/"
+		}
+
 		createdAt := time.Unix(st.Ctim.Sec, 0)
 
 		f, _ := file.Info()
 		modifiedAt := time.Unix(f.ModTime().Unix(), 0)
-		d.files = append(d.files, NewFile(file.Name(), "/"+path, createdAt, modifiedAt))
+		d.files = append(d.files, NewFile(file.Name(), path, f.Size(), createdAt, modifiedAt))
 	}
 }

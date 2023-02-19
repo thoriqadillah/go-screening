@@ -1,6 +1,8 @@
-package persistent
+package dir
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 	"sync"
@@ -10,7 +12,7 @@ const PATH = "./tmp/"
 
 var lock sync.Mutex
 
-func Save(name string, value interface{}) error {
+func save(name string, value []file) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -32,7 +34,7 @@ func Save(name string, value interface{}) error {
 	return nil
 }
 
-func Load(name string, value interface{}) error {
+func load(name string, value *[]file) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -43,4 +45,17 @@ func Load(name string, value interface{}) error {
 	defer f.Close()
 
 	return toStruct(f, value)
+}
+
+func toJSON(value []file) (io.Reader, error) {
+	b, err := json.MarshalIndent(value, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(b), nil
+}
+
+func toStruct(r io.Reader, value *[]file) error {
+	return json.NewDecoder(r).Decode(value)
 }
