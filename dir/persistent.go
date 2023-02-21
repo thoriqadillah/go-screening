@@ -5,17 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"sync"
 )
 
 const PATH = "./tmp/"
 
-var lock sync.Mutex
-
 func save(name string, value []file) error {
-	lock.Lock()
-	defer lock.Unlock()
-
 	f, err := os.Create(PATH + name)
 	if err != nil {
 		return err
@@ -35,9 +29,6 @@ func save(name string, value []file) error {
 }
 
 func load(name string, value *[]file) error {
-	lock.Lock()
-	defer lock.Unlock()
-
 	f, err := os.Open(PATH + name)
 	if err != nil {
 		return err
