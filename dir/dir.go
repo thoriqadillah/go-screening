@@ -46,14 +46,14 @@ func (d *directory) Compare(target *directory) {
 
 	// Jika file ada di source tapi tidak ada di target berikan keterangan NEW
 	for i, sourcefile := range sourcefiles {
-		_, err := os.Stat(targetpath + "/" + sourcefile.Path + sourcefile.Name)
+		_, err := os.Stat(targetpath + "/" + sourcefile.path + sourcefile.name)
 
-		if err != nil && sourcefile.CreatedAt.Equal(sourcefile.ModifiedAt) {
-			fmt.Println(d.path + "/" + sourcefile.Path + sourcefile.Name + " NEW")
+		if err != nil && sourcefile.createdAt.Equal(sourcefile.modifiedAt) {
+			fmt.Println(d.path + "/" + sourcefile.path + sourcefile.name + " NEW")
 		}
 
-		if !savedSource[i].ModifiedAt.Equal(sourcefile.ModifiedAt) {
-			fmt.Println(d.path + "/" + sourcefile.Path + sourcefile.Name + " MODIFIED")
+		if !savedSource[i].modifiedAt.Equal(sourcefile.modifiedAt) {
+			fmt.Println(d.path + "/" + sourcefile.path + sourcefile.name + " MODIFIED")
 		}
 	}
 
@@ -65,14 +65,14 @@ func (d *directory) Compare(target *directory) {
 	}
 	// Jika file tidak ada di source tapi ada di target berikan keterangan DELETED
 	for i, targetfile := range targetfiles {
-		_, err := os.Stat(d.path + "/" + targetfile.Path + targetfile.Name)
+		_, err := os.Stat(d.path + "/" + targetfile.path + targetfile.name)
 
-		if err != nil && !targetfile.CreatedAt.Equal(targetfile.ModifiedAt) {
-			fmt.Println(d.path + "/" + targetfile.Path + targetfile.Name + " DELETED")
+		if err != nil && !targetfile.createdAt.Equal(targetfile.modifiedAt) {
+			fmt.Println(d.path + "/" + targetfile.path + targetfile.name + " DELETED")
 		}
 
-		if !savedTarget[i].ModifiedAt.Equal(targetfile.ModifiedAt) {
-			fmt.Println(targetpath + "/" + targetfile.Path + targetfile.Name + " MODIFIED")
+		if !savedTarget[i].modifiedAt.Equal(targetfile.modifiedAt) {
+			fmt.Println(targetpath + "/" + targetfile.path + targetfile.name + " MODIFIED")
 		}
 	}
 }
@@ -123,6 +123,6 @@ func (d *directory) readDir(path string, dir []string, root string) {
 
 		f, _ := file.Info()
 		modifiedAt := time.Unix(f.ModTime().Unix(), 0)
-		d.files = append(d.files, NewFile(file.Name(), path, f.Size(), createdAt, modifiedAt))
+		d.files = append(d.files, NewFile(file.Name(), path, createdAt, modifiedAt))
 	}
 }

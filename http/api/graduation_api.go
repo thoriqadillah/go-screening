@@ -3,9 +3,9 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"sync"
 
 	"github.com/thoriqadillah/screening/http/model/graduees"
+	"github.com/thoriqadillah/screening/http/model/request"
 )
 
 type GraduationAPI struct {
@@ -22,8 +22,8 @@ func NewGraduationAPI(url string) GraduationAPI {
 	}
 }
 
-func (g *GraduationAPI) GetGraduees(ch chan *graduees.Data, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (g *GraduationAPI) GetGraduees(req *request.Request) {
+	defer req.Done()
 
 	res, err := g.client.Get(g.url)
 	if err != nil {
@@ -36,7 +36,7 @@ func (g *GraduationAPI) GetGraduees(ch chan *graduees.Data, wg *sync.WaitGroup) 
 		panic(err)
 	}
 
-	ch <- &g.data
+	req.Save(&g.data)
 }
 
 func (g *GraduationAPI) GetData() *graduees.Data {

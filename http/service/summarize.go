@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/thoriqadillah/screening/http/api"
-	"github.com/thoriqadillah/screening/http/model/graduees"
+	"github.com/thoriqadillah/screening/http/model/request"
 	"github.com/thoriqadillah/screening/worker"
 )
 
@@ -31,9 +31,6 @@ func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...st
 
 	URL := g.api.URL()
 
-	ch := make(chan *graduees.Data)
-	defer close(ch)
-
 	workers := worker.NewWorker(concurrent_limit)
 	workers.Run()
 
@@ -46,13 +43,14 @@ func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...st
 		g.api.UpdateURL(temp)
 
 		wg.Add(2)
+		req := request.New(g.api.URL(), &wg)
 		workers.Add(func() {
-			g.api.GetGraduees(ch, &wg)
+			g.api.GetGraduees(&req)
 		})
 
-		p := path + "/" + year + ext
 		workers.Add(func() {
-			g.writeCSV(p, ch, &wg)
+			p := path + "/" + year + ext
+			g.writeCSV(p, &req)
 		})
 
 		g.api.UpdateURL(URL)
@@ -63,8 +61,8 @@ func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...st
 	return nil
 }
 
-func (g *GraduationService) writeCSV(name string, ch chan *graduees.Data, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (g *GraduationService) writeCSV(name string, req *request.Request) {
+	defer req.Done()
 
 	file, err := os.Create(name)
 	if err != nil {
@@ -72,7 +70,7 @@ func (g *GraduationService) writeCSV(name string, ch chan *graduees.Data, wg *sy
 	}
 
 	csvwriter := csv.NewWriter(file)
-	grads := <-ch
+	grads := <-req.Result()
 
 	forfield := true
 

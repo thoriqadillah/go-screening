@@ -1,6 +1,8 @@
 package worker
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type worker struct {
 	total int

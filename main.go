@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/thoriqadillah/screening/cmd"
-	"github.com/thoriqadillah/screening/dir"
 	"github.com/thoriqadillah/screening/http/api"
 	"github.com/thoriqadillah/screening/http/service"
 	"github.com/thoriqadillah/screening/lib/array"
@@ -23,13 +22,13 @@ func main() {
 		// return a > b //ascending
 	})
 
-	sourcepath := "/home/thoriqadillah/Development/Go/src/go-screening"
-	source := dir.NewDirectory(sourcepath)
+	// sourcepath := "/home/thoriqadillah/Development/Go/src/go-screening"
+	// source := dir.NewDirectory(sourcepath)
 
-	targetpath := "/home/thoriqadillah/Development/Go/src/go-screening-copy"
-	target := dir.NewDirectory(targetpath)
+	// targetpath := "/home/thoriqadillah/Development/Go/src/go-screening-copy"
+	// target := dir.NewDirectory(targetpath)
 
-	source.Compare(&target)
+	// source.Compare(&target)
 
 	var concurrent_limit int
 	var output string
@@ -40,5 +39,5 @@ func main() {
 	api := api.NewGraduationAPI(URL)
 	graduation := service.NewGraduation(api)
 
-	graduation.ToCSV(output, concurrent_limit, "2013", "2000", "2001")
+	graduation.ToCSV(output, concurrent_limit, "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014")
 }
