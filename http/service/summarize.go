@@ -29,9 +29,11 @@ func NewGraduation(api api.GraduationAPI) GraduationService {
 func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...string) error {
 	ext := ".csv"
 
-	ch := make(chan *request.Request)
 	workers := worker.NewWorker(concurrent_limit)
 	workers.Run()
+
+	ch := make(chan *request.Request, 1)
+	defer close(ch)
 
 	var wg sync.WaitGroup
 
