@@ -1,33 +1,35 @@
 package request
 
 import (
-	"sync"
-
 	"github.com/thoriqadillah/screening/http/model/graduees"
 )
 
 type Request struct {
 	url    string
-	result chan *graduees.Data
-	wg     *sync.WaitGroup
+	name   string
+	result *graduees.Data
 }
 
-func New(url string, wg *sync.WaitGroup) Request {
+func New(url string, name string) Request {
 	return Request{
 		url:    url,
-		result: make(chan *graduees.Data),
-		wg:     wg,
+		name:   name,
+		result: &graduees.Data{},
 	}
 }
 
-func (r *Request) Save(res *graduees.Data) {
-	r.result <- res
+func (r *Request) URL() string {
+	return r.url
 }
 
-func (r *Request) Result() chan *graduees.Data {
+func (r *Request) Name() string {
+	return r.name
+}
+
+func (r *Request) Result() *graduees.Data {
 	return r.result
 }
 
-func (r *Request) Done() {
-	r.wg.Done()
+func (r *Request) Save(res *graduees.Data) {
+	r.result = res
 }

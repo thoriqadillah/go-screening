@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/thoriqadillah/screening/http/model/graduees"
 	"github.com/thoriqadillah/screening/http/model/request"
@@ -22,21 +23,23 @@ func NewGraduationAPI(url string) GraduationAPI {
 	}
 }
 
-func (g *GraduationAPI) GetGraduees(req *request.Request) {
-	defer req.Done()
+func (g *GraduationAPI) GetGraduees(req *request.Request, wg *sync.WaitGroup) error {
+	defer wg.Done()
 
-	res, err := g.client.Get(g.url)
+	res, err := g.client.Get(req.URL())
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	defer res.Body.Close()
 
 	if err := json.NewDecoder(res.Body).Decode(&g.data); err != nil {
-		panic(err)
+		return err
 	}
 
 	req.Save(&g.data)
+
+	return nil
 }
 
 func (g *GraduationAPI) GetData() *graduees.Data {

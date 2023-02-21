@@ -29,31 +29,30 @@ func NewGraduation(api api.GraduationAPI) GraduationService {
 func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...string) error {
 	ext := ".csv"
 
-	URL := g.api.URL()
-
+	ch := make(chan *request.Request)
 	workers := worker.NewWorker(concurrent_limit)
 	workers.Run()
 
 	var wg sync.WaitGroup
 
 	for _, year := range years {
-		temp := URL
+		url := g.api.URL()
 		query := "&q=" + year
-		temp += query
-		g.api.UpdateURL(temp)
+		url += query
 
 		wg.Add(2)
-		req := request.New(g.api.URL(), &wg)
+		name := path + "/" + year + ext
+		req := request.New(url, name)
 		workers.Add(func() {
-			g.api.GetGraduees(&req)
+			if err := g.api.GetGraduees(&req, &wg); err != nil {
+				panic(err)
+			}
+			ch <- &req
 		})
 
 		workers.Add(func() {
-			p := path + "/" + year + ext
-			g.writeCSV(p, &req)
+			g.writeCSV(ch, &wg)
 		})
-
-		g.api.UpdateURL(URL)
 	}
 
 	wg.Wait()
@@ -61,16 +60,18 @@ func (g *GraduationService) ToCSV(path string, concurrent_limit int, years ...st
 	return nil
 }
 
-func (g *GraduationService) writeCSV(name string, req *request.Request) {
-	defer req.Done()
+func (g *GraduationService) writeCSV(ch chan *request.Request, wg *sync.WaitGroup) {
+	defer wg.Done()
 
-	file, err := os.Create(name)
+	req := <-ch
+
+	file, err := os.Create(req.Name())
 	if err != nil {
 		panic(err)
 	}
 
 	csvwriter := csv.NewWriter(file)
-	grads := <-req.Result()
+	grads := req.Result()
 
 	forfield := true
 
