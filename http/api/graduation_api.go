@@ -12,14 +12,12 @@ import (
 type GraduationAPI struct {
 	client *http.Client
 	url    string
-	data   graduees.Data
 }
 
 func NewGraduationAPI(url string) GraduationAPI {
 	return GraduationAPI{
 		client: &http.Client{},
 		url:    url,
-		data:   graduees.Data{},
 	}
 }
 
@@ -33,17 +31,14 @@ func (g *GraduationAPI) GetGraduees(req *request.Request, wg *sync.WaitGroup) er
 
 	defer res.Body.Close()
 
-	if err := json.NewDecoder(res.Body).Decode(&g.data); err != nil {
+	var grads graduees.Data
+	if err := json.NewDecoder(res.Body).Decode(&grads); err != nil {
 		return err
 	}
 
-	req.Save(&g.data)
+	req.Save(&grads)
 
 	return nil
-}
-
-func (g *GraduationAPI) GetData() *graduees.Data {
-	return &g.data
 }
 
 func (g *GraduationAPI) UpdateURL(url string) {
